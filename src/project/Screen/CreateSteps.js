@@ -10,23 +10,28 @@ import { useSelector, useDispatch } from "react-redux";
 import { getPersonalID, getTaskID } from "../Global/Redux";
 import AssignedProfile from "./AssignedProfile";
 
-const ExploreProject = () => {
+import LinearProgress from "@mui/material/LinearProgress";
+
+const CreateSteps = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const getPID = useSelector((state) => state.myReducer.projectID);
+  const getPPID = useSelector((state) => state.myReducer.personalID);
+  //   const getTask = useSelector((state) => state.myReducer.taskID);
 
-  const [exID, setExID] = useState(dispatch(getPersonalID(id)));
-
+  const [saveMyID, setSaveMyID] = useState(dispatch(getTaskID(id)));
   console.log(getPID);
   const { currentUser } = useContext(AuthContext);
   const [toggle, setToggle] = useState(false);
-  const [name, setName] = useState("");
+  const [steps, setSteps] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
 
   const [myTeam, setMyTeam] = useState([{ staff: "" }]);
 
+  const [rate, setRate] = useState(0);
+  const [total, setTotal] = useState(0);
+
   const [presentUser, setPresentUser] = useState([]);
-  const [members, setMembers] = useState([]);
   const [project, setProject] = useState([]);
 
   const onToggle = () => {
@@ -39,15 +44,35 @@ const ExploreProject = () => {
       .collection("workstation")
       .doc(getPID)
       .collection("project")
-      .doc(id)
+      .doc(getPPID)
       .collection("task")
+      .doc(id)
+      .collection("steps")
       .doc()
       .set({
-        name,
-        assignedTo,
+        steps,
+        confirm: false,
         createdBy: currentUser?.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
+    setSteps("");
+  };
+
+  const updateSteps = async (myID) => {
+    await app
+      .firestore()
+      .collection("workstation")
+      .doc(getPID)
+      .collection("project")
+      .doc(getPPID)
+      .collection("task")
+      .doc(id)
+      .collection("steps")
+      .doc(myID)
+      .update({
+        confirm: true,
+      });
+    setSteps("");
   };
 
   const viewWrokStation = async () => {
@@ -56,28 +81,16 @@ const ExploreProject = () => {
       .collection("workstation")
       .doc(getPID)
       .collection("project")
-      .doc(id)
+      .doc(getPPID)
       .collection("task")
+      .doc(id)
+      .collection("steps")
       .onSnapshot((snapshot) => {
         const r = [];
         snapshot.forEach((doc) => {
           r.push({ ...doc.data(), id: doc.id });
         });
         setProject(r);
-      });
-  };
-
-  const viewTeamMembers = async () => {
-    await app
-      .firestore()
-      .collection("workstation")
-
-      .onSnapshot((snapshot) => {
-        const r = [];
-        snapshot.forEach((doc) => {
-          r.push({ ...doc.data(), id: doc.id });
-        });
-        setMembers(r);
       });
   };
 
@@ -92,11 +105,18 @@ const ExploreProject = () => {
       });
   };
 
+  const getDone = () => {
+    let checked = project.filter((el) => el.confirm === true).length;
+    setRate(checked);
+    setTotal(project.length);
+  };
+
   useEffect(() => {
     viewWrokStation();
     viewUser();
-    viewTeamMembers();
-  }, []);
+    getDone();
+    console.log(rate, total);
+  }, [rate]);
 
   return (
     <Container>
@@ -105,57 +125,24 @@ const ExploreProject = () => {
           Welcome back, <span>{presentUser?.userName}</span>
         </Text>
         <Text>
-          You have assigned <strong>{project.length}</strong> Task to your staff
+          You have assigned <strong>{project.length}</strong> STEPS to your Task
         </Text>
         <br />
 
         {currentUser ? (
-          <Button onClick={onToggle}>
-            Have any Project in Mind, Start Here
-          </Button>
+          <Button onClick={onToggle}>Create how to inend to finish up!</Button>
         ) : null}
 
         {toggle ? (
           <Holder>
             <br />
             <Input
-              placeholder="Name your new Work Station"
-              value={name}
+              placeholder="Map your Steps"
+              value={steps}
               onChange={(e) => {
-                setName(e.target.value);
+                setSteps(e.target.value);
               }}
             />
-            {/* <Input
-              placeholder="Assign this Task to: "
-              value={assignedTo}
-              onChange={(e) => {
-                setAssignedTo(e.target.value);
-              }}
-            /> */}
-            <div>
-              {" "}
-              {members.map((props) => (
-                <div>
-                  {currentUser.uid === props.createdBy ? (
-                    <Select
-                      value={assignedTo}
-                      onChange={(e) => {
-                        setAssignedTo(e.target.value);
-                      }}
-                    >
-                      {props.myTeam.map((props) => (
-                        <Option value={props.staff}>
-                          {<div>{props.staff}</div>}
-                        </Option>
-                      ))}
-                    </Select>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-            <br />
-            <br />
-
             <Button
               onClick={() => {
                 createdWrokStation();
@@ -169,45 +156,77 @@ const ExploreProject = () => {
 
         <br />
         <br />
-        <CardHolder>
-          {project?.map((props) => (
-            <Card key={props.id}>
-              <Text>
-                This Task has been assigned to
-                <AssignedProfile name image team={props.assignedTo} />
-              </Text>
-              <Text fs> {props.name} </Text>
+        <div>
+          {
+            <Rating
+              onClick={() => {
+                const checked = project.filter(
+                  (el) => el.confirm === true
+                ).length;
+                const totalRate = project.length;
+                console.log((checked / totalRate) * 100);
+              }}
+            >
+              <LinearProgress
+                variant="determinate"
+                value={
+                  (project.filter((el) => el.confirm === true).length /
+                    project.length) *
+                  100
+                }
+              />
+              {Math.ceil(
+                (project.filter((el) => el.confirm === true).length /
+                  project.length) *
+                  100
+              )}
+              %
+            </Rating>
+          }
+        </div>
 
-              {currentUser.uid === props.assignedTo ? (
-                <Button1 to={`/steps/${props.id}`}>Explore This Task</Button1>
-              ) : null}
-            </Card>
-          ))}
-        </CardHolder>
+        {project?.map((props) => (
+          <Div key={props.id}>
+            <br />
+
+            {props.confirm ? (
+              <Box type="checkbox" checked />
+            ) : (
+              <Box type="checkbox" />
+            )}
+            <Text>{props.steps} </Text>
+          </Div>
+        ))}
+        <br />
+        <Button1
+          to={`/review`}
+          onClick={() => {
+            console.log("Hello", saveMyID);
+            // updateSteps(props.id);
+          }}
+        >
+          View and Update your Status
+        </Button1>
       </Wrapper>
     </Container>
   );
 };
 
-export default ExploreProject;
+export default CreateSteps;
 
-const Option = styled.option`
-  width: 315px;
-  height: 40px;
-  padding: 10px 0;
-  margin: 10px 0;
-  font-size: 15px;
+const Rating = styled.div`
+  width: 200px;
 `;
-
-const Select = styled.select`
-  width: 315px;
-  height: 40px;
-  padding-left: 10px;
-  margin-top: 5px;
-  outline: none;
-  border: 1px solid gray;
+const Box = styled.input`
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
 `;
-
+const Div = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+`;
 const CardHolder = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -300,9 +319,9 @@ const Holder = styled.div`
 `;
 
 const Text = styled.div`
-  font-size: ${({ fs }) => (fs ? "30px" : "13px")};
-  width: 300px;
-  text-align: center;
+  font-size: ${({ fs }) => (fs ? "30px" : "15px")};
+  min-width: 300px;
+  /* text-align: center; */
   span {
     text-transform: capitalize;
     font-weight: bold;
@@ -322,24 +341,3 @@ const Container = styled.div`
   height: 100%;
   background-color: lightgray;
 `;
-
-{
-  /* {myTeam.map((props, i) => (
-              <Hold key={i}>
-                <Icon onClick={addStaff}>
-                  <AddBoxIcon />
-                </Icon>
-                <Icon bg onClick={removeStaff}>
-                  <IndeterminateCheckBoxIcon />
-                </Icon>
-                <InputState
-                  placeholder="Enter your Team: "
-                  name="staff"
-                  value={props.staff}
-                  onChange={(e) => {
-                    onChangeStaff(i, e);
-                  }}
-                />
-              </Hold>
-            ))} */
-}

@@ -102,11 +102,7 @@ const ProjectSpace = () => {
         </Text>
         <br />
 
-        {currentUser ? null : (
-          <Button onClick={onToggle}>
-            Have any Project in Mind, Start Here
-          </Button>
-        )}
+        <Button onClick={onToggle}>Have any Project in Mind, Start Here</Button>
 
         {toggle ? (
           <Holder>

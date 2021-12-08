@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   projectID: [],
   personalID: [],
-  taslID: [],
+  taskID: [],
 };
 
 const Redux = createSlice({
@@ -19,7 +19,7 @@ const Redux = createSlice({
     },
 
     getTaskID: (state, { payload }) => {
-      state.personalID = payload;
+      state.taskID = payload;
     },
   },
 });

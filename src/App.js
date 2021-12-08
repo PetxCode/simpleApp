@@ -7,6 +7,8 @@ import ExploreProject from "./project/Screen/ExploreProject";
 import ProjectSpace from "./project/Screen/ProjectSpace";
 import WorkSpace from "./project/Screen/WorkSpace";
 import PersonalSpace from "./project/Screen/PersonalProject";
+import CreateSteps from "./project/Screen/CreateSteps";
+import Review from "./project/Screen/Review";
 
 const App = () => {
   return (
@@ -20,6 +22,8 @@ const App = () => {
           <Route path="/personal" element={<PersonalSpace />} />
           <Route path="/project/:id" element={<ProjectSpace />} />
           <Route path="/explore/:id" element={<ExploreProject />} />
+          <Route path="/steps/:id" element={<CreateSteps />} />
+          <Route path="/review" element={<Review />} />
         </Routes>
       </BrowserRouter>
     </div>
