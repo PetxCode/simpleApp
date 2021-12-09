@@ -144,9 +144,7 @@ const ExploreProject = () => {
                       }}
                     >
                       {props.myTeam.map((props) => (
-                        <Option value={props.staff}>
-                          {<div>{props.staff}</div>}
-                        </Option>
+                        <Option value={props.staff}>{props.staff}</Option>
                       ))}
                     </Select>
                   ) : null}

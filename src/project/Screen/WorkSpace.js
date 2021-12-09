@@ -139,7 +139,7 @@ const WorkSpace = () => {
         <CardHolder>
           {workspace?.map((props) => (
             <div key={props.id}>
-              {currentUser.uid === props.createdBy ? (
+              {currentUser?.uid === props.createdBy ? (
                 <Card>
                   <Text fs>{props.name} </Text>
 

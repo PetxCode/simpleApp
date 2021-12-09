@@ -36,8 +36,8 @@ const Header = () => {
           </Nav>
           {currentUser ? (
             <Nav1
-              omnClick={() => {
-                app.auth().signOut(0);
+              onClick={() => {
+                app.auth().signOut();
               }}
             >
               <Icon>
